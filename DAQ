@@ -1,0 +1,52 @@
+import pandas as pd
+from scipy import integrate
+import numpy as np
+from scipy.integrate import simps
+
+#Creamos vector del tiempo que tiene nuestro registro
+max_tiempo = 5.4594
+paso_tiempo = 0.0004
+num_registros = int(max_tiempo / paso_tiempo) + 1
+
+tiempo_ms = [i * paso_tiempo for i in range(num_registros)]
+df_time = pd.DataFrame({'Tiempo (s)': tiempo_ms})
+
+
+tabla_voltaje_DAQ = pd.DataFrame()
+
+#Añadimos los voltajes que nos proporciona la DAQ de las diferentes resistencias en una única tabla
+for i in range(1, 11):
+    nombre_archivo = f'1202DAQ{i}.xlsx'
+    df = pd.read_excel(f'{carpeta}/{nombre_archivo}', sheet_name=f'Capture {i}')
+    tabla_voltaje_DAQ[f'Resistencia {i}'] = df['Input 0']
+
+#Escribimos las diferentes resistencias con las que trabajamos
+resistencias = [820, 150000, 220000, 330000, 470000,570000,680000,780000,900000,1150000]
+
+#Calculamos la corriente con ley de Ohm
+tabla_corriente_DAQ= tabla_voltaje_DAQ.copy()
+for i, col_idx in enumerate(tabla_voltaje_DAQ.columns):
+     tabla_corriente_DAQ.iloc[:, i] = tabla_voltaje_DAQ.iloc[:, i] / resistencias[i]
+
+
+#Calculamos la potencia para cada valor
+tabla_potencia_DAQ=tabla_corriente_DAQ.copy()
+for j, col_jdx in enumerate(tabla_corriente_DAQ.columns):
+     tabla_potencia_DAQ.iloc[:, j] = (tabla_corriente_DAQ.iloc[:, j]**2) * resistencias[j]
+
+#Juntamos en una tabla el vector tiempo y todas las potencias
+df_final = pd.concat([df_time, tabla_potencia_DAQ], axis=1)
+
+tabla_potencia_DAQ = pd.DataFrame(tabla_potencia_DAQ)
+
+#Calculo de la integral
+dt = df_time.iloc[1, 0] - df_time.iloc[0, 0]
+integrals_df = pd.DataFrame(index=tabla_potencia_DAQ.index, columns=tabla_potencia_DAQ.columns)
+
+for column in tabla_potencia_DAQ.columns:
+    # Calcular la integral de cada columna utilizando el método trapz
+    integral_values = np.trapz(tabla_potencia_DAQ[column], dx=dt)
+    # Asignar el valor de la integral a la columna correspondiente en el DataFrame de integrals_df
+    integrals_df[column] = integral_values
+
+print(integrals_df)
