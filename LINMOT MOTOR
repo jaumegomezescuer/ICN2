@@ -18,26 +18,46 @@ tabla_motor_fuerza = pd.DataFrame()
 tabla__motor_corriente = pd.DataFrame()
 tabla__motor_posicion = pd.DataFrame()
 
-#Almacenamos el voltaje diferencial en su tabla correspondiente
+#Almacenamos el voltaje diferencial en su tabla correspondiente de todos los archivos en la carpeta indicada
 for i in range(1, 11):
     nombre_archivo1 = f'1202Motor{i}.csv'
     df1 = pd.read_csv(f'{carpeta}/{nombre_archivo1}', delimiter=',')
     tabla__motor_voltaje[f'Voltaje {i}'] = df1['MC SW Overview - X4.10/X4.11 Diff Analog Voltage(V)']
 
-#Almacenamos la fuerza en su tabla correspondiente
+#Almacenamos la fuerza en su tabla correspondiente de todos los archivos en la carpeta indicada
 for i in range(1, 11):
     nombre_archivo2 = f'1202Motor{i}.csv'
     df2 = pd.read_csv(f'{carpeta}/{nombre_archivo2}', delimiter=',')
     tabla_motor_fuerza[f'Fuerza Medida {i}'] = df2['MC SW Force Control - Measured Force(N)']
 
-
+#Almacenamos la corriente del motor en su tabla correspondiente de todos los archivos en la carpeta indicada
 for i in range(1, 11):
     nombre_archivo3 = f'1202Motor{i}.csv'
     df3 = pd.read_csv(f'{carpeta}/{nombre_archivo3}', delimiter=',')
     tabla__motor_corriente[f'Corriente {i}'] = df3['MC SW Overview - Motor Current(A)']
 
-
+#Almacenamos la posición en su tabla correspondiente de todos los archivos en la carpeta indicada
 for i in range(1, 11):
     nombre_archivo4 = f'1202Motor{i}.csv'
     df4 = pd.read_csv(f'{carpeta}/{nombre_archivo4}', delimiter=',')
     tabla__motor_posicion[f'Posicion {i}'] = df4['MC SW Overview - Actual Position(mm)']
+
+
+# INTERPOLADOR DE LA FUERZA
+# Generar un nuevo índice con más puntos
+new_index = np.linspace(0, len(tabla_motor_fuerza)-1, num=13649)
+
+# Crear un nuevo DataFrame con el nuevo índice
+new_df = pd.DataFrame(index=new_index)
+
+# Interpolar cada columna individualmente
+for column in tabla_motor_fuerza.columns:
+    original_values = tabla_motor_fuerza[column].values
+    
+    # Crear una serie con una mayor densidad de muestreo
+    interpolated_values = np.interp(new_index, range(len(tabla_motor_fuerza)), original_values)
+    
+    # Asignar los valores interpolados al nuevo DataFrame
+    new_df[column] = interpolated_values
+
+print(new_df)
