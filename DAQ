@@ -3,6 +3,8 @@ from scipy import integrate
 import numpy as np
 from scipy.integrate import simps
 
+carpeta = 'C:/Users/Jaume/Downloads/DAQ'
+
 #Creamos vector del tiempo que tiene nuestro registro
 max_tiempo = 5.4594
 paso_tiempo = 0.0004
@@ -39,7 +41,7 @@ df_final = pd.concat([df_time, tabla_potencia_DAQ], axis=1)
 
 tabla_potencia_DAQ = pd.DataFrame(tabla_potencia_DAQ)
 
-#Calculo de la integral
+#Calculo de la integral (no funciona)
 dt = df_time.iloc[1, 0] - df_time.iloc[0, 0]
 integrals_df = pd.DataFrame(index=tabla_potencia_DAQ.index, columns=tabla_potencia_DAQ.columns)
 
